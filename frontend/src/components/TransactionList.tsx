@@ -38,7 +38,7 @@ const TransactionList: React.FC = () => {
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       completed: { variant: 'default' as const, className: 'bg-green-100 text-green-800' },
-      pending: { variant: 'secondary' as const, className: 'bg-blue-100 text-blue-800' },
+      pending: { variant: 'secondary' as const, className: 'bg-gray-100 text-black' },
       failed: { variant: 'destructive' as const, className: 'bg-red-100 text-red-800' }
     };
     

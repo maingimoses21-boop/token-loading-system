@@ -51,17 +51,30 @@ export const getTransactions = async (userId: string): Promise<Transaction[]> =>
 
 export interface UserBalance {
   user_id: string;
-  totalAmountPaid: number;
-  totalUnitsPurchased: number;
+  // Backend may return either a full object (from recompute) or a minimal one with only availableUnits when persisted
+  totalAmountPaid?: number;
+  totalUnitsPurchased?: number;
   availableUnits: number;
-  transactionCount: number;
-  timestamp: string;
+  transactionCount?: number;
+  timestamp?: string;
 }
 
-export const getUserBalance = async (userId: string): Promise<UserBalance> => {
+export const getUserBalance = async (meterNo: string): Promise<UserBalance> => {
   try {
-    const response = await api.get(`/users/${userId}/balance`);
-    return response.data;
+    const response = await api.get(`/users/${encodeURIComponent(meterNo)}/balance`);
+    // Ensure we always return at least availableUnits and meter_no
+    const data = response.data || {};
+    return {
+      user_id: data.user_id || undefined,
+      // backend returns meter_no and availableUnits for persisted case
+      availableUnits: typeof data.availableUnits === 'number' ? data.availableUnits : parseFloat(data.availableUnits) || 0,
+      totalAmountPaid: typeof data.totalAmountPaid === 'number' ? data.totalAmountPaid : (data.totalAmountPaid ? parseFloat(data.totalAmountPaid) : undefined),
+      totalUnitsPurchased: typeof data.totalUnitsPurchased === 'number' ? data.totalUnitsPurchased : (data.totalUnitsPurchased ? parseFloat(data.totalUnitsPurchased) : undefined),
+      transactionCount: typeof data.transactionCount === 'number' ? data.transactionCount : undefined,
+      timestamp: data.timestamp || undefined,
+      // include the returned meter_no when present
+      ...(data.meter_no ? { meter_no: data.meter_no } : {})
+    } as UserBalance;
   } catch (error) {
     console.error('Error fetching user balance:', error);
     throw new Error('Failed to fetch user balance');

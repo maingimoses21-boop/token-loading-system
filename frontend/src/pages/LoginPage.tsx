@@ -165,7 +165,7 @@ const LoginPage = () => {
 
               <Button 
                 type="submit" 
-                className="w-full" 
+                className="w-full bg-black hover:bg-black/90 text-white" 
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -269,7 +269,7 @@ const LoginPage = () => {
                       <Button
                         type="submit"
                         disabled={isRegistering}
-                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                        className="flex-1 bg-black hover:bg-black/90 text-white"
                       >
                         {isRegistering ? (
                           <>

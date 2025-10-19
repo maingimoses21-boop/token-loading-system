@@ -19,15 +19,15 @@ const DashboardPage = () => {
 
   // Fetch calculated balance from transactions
   const fetchBalance = async () => {
-    if (!user?.user_id) return;
+    if (!user?.meter_no) return;
     
     try {
       setIsLoadingBalance(true);
-      const balanceData = await getUserBalance(user.user_id);
-      setTotalAmountPaid(balanceData.totalAmountPaid);
-      setTotalUnitsPurchased(balanceData.totalUnitsPurchased);
-      setAvailableUnits(balanceData.availableUnits);
-      setTransactionCount(balanceData.transactionCount);
+      const balanceData = await getUserBalance(user.meter_no);
+      setTotalAmountPaid(balanceData.totalAmountPaid || 0);
+      setTotalUnitsPurchased(balanceData.totalUnitsPurchased || 0);
+      setAvailableUnits(typeof balanceData.availableUnits === 'number' ? balanceData.availableUnits : parseFloat(String(balanceData.availableUnits)) || 0);
+      setTransactionCount(balanceData.transactionCount || 0);
       setLastUpdated(new Date());
     } catch (error) {
       console.error('Error fetching balance:', error);
@@ -41,16 +41,8 @@ const DashboardPage = () => {
   };
 
   useEffect(() => {
+    // Fetch persisted balance once when user changes
     fetchBalance();
-    
-    // Set up auto-refresh every 10 seconds to show real-time consumption
-    const refreshInterval = setInterval(() => {
-      if (user?.user_id) {
-        fetchBalance();
-      }
-    }, 10000); // Refresh every 10 seconds
-    
-    return () => clearInterval(refreshInterval);
   }, [user?.user_id]);
 
   const handlePaymentSuccess = () => {
@@ -125,12 +117,10 @@ const DashboardPage = () => {
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-black">
-                  <Hash className="h-5 w-5 text-gray-600" />
+                  <Hash className="h-5 w-7 text-gray-600" />
                   Account Summary
                 </div>
                 <div className="flex items-center gap-2 text-xs text-gray-600">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span>Live updates every 10s</span>
                   {lastUpdated && (
                     <span className="text-xs">
                       Updated {lastUpdated.toLocaleTimeString()}
@@ -140,7 +130,7 @@ const DashboardPage = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div>
+              {/* <div>
                 <p className="text-sm text-gray-600">Total Amount Paid</p>
                 {isLoadingBalance ? (
                   <div className="flex items-center space-x-2">
@@ -155,7 +145,7 @@ const DashboardPage = () => {
                 <p className="text-xs text-gray-600 mt-1">
                   Total amount paid so far ({transactionCount} payments)
                 </p>
-              </div>
+              </div> */}
               
               <div className="border-t border-gray-200 pt-4">
                 <p className="text-sm text-gray-600">Available Units</p>
@@ -170,8 +160,8 @@ const DashboardPage = () => {
                       <span className="text-sm text-gray-600">units remaining</span>
                     </div>
                     <div className="text-xs text-gray-600">
-                      <p>Purchased: {totalUnitsPurchased.toFixed(2)} units</p>
-                      <p>Consumed: {(totalUnitsPurchased - availableUnits).toFixed(2)} units</p>
+                      {/* <p>Purchased: {totalUnitsPurchased.toFixed(2)} units</p> */}
+                      {/* <p>Consumed: {(totalUnitsPurchased - availableUnits).toFixed(2)} units</p> */}
                     </div>
                   </div>
                 )}
@@ -179,14 +169,7 @@ const DashboardPage = () => {
                   <p className="text-xs text-gray-600">
                     Rate: 1 unit = KSH 25.00
                   </p>
-                  {!isLoadingBalance && availableUnits > 0 && (
-                    <div className="flex items-center gap-1">
-                      <div className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse"></div>
-                      <p className="text-xs text-orange-600 font-medium">
-                        Consuming 0.1 units/15s
-                      </p>
-                    </div>
-                  )}
+                  {/* Automatic consumption simulation disabled — balance only updates on transactions */}
                 </div>
               </div>
             </CardContent>
@@ -201,11 +184,11 @@ const DashboardPage = () => {
               Make a payment or manage your account
             </CardDescription>
           </CardHeader>
-          <CardContent>
+            <CardContent>
             <Button 
               onClick={() => setIsPaymentModalOpen(true)}
               size="lg"
-              className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white border-0"
+              className="w-full md:w-auto bg-black hover:bg-black/90 text-white border-0"
             >
               <CreditCard className="h-5 w-5 mr-2" />
               Make Payment
