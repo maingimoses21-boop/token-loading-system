@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const { createTransactionForMeter, findUserIdByMeter, saveCallbackTransaction, calculateUserBalance } = require('./transactions');
 const { simulateC2BPayment } = require('./daraja');
 const { db } = require('./firebase');
+const iotRoutes = require('./routes/iot');
 
 // Ensure firebase initialization happens by importing firebase.js
 require('./firebase');
@@ -79,12 +80,12 @@ app.get('/users/lookup', async (req, res) => {
 // Register new user endpoint
 app.post('/users', async (req, res) => {
   try {
-    const { name, email, meter_no } = req.body;
+    const { name, email, meter_no, phone_number } = req.body;
     
     // Validate required fields
-    if (!name || !email || !meter_no) {
+    if (!name || !email || !meter_no || !phone_number) {
       return res.status(400).json({ 
-        error: 'All fields are required: name, email, meter_no' 
+        error: 'All fields are required: name, email, meter_no, phone_number' 
       });
     }
     
@@ -114,6 +115,7 @@ app.post('/users', async (req, res) => {
       name: name.trim(),
       email: email.trim().toLowerCase(),
       meter_no: meter_no.trim(),
+      phone_number: phone_number.trim(),
       balance: 0,
       created_at: new Date().toISOString(),
       latest_transaction_id: null
@@ -282,7 +284,34 @@ app.post('/daraja/simulate', async (req, res) => {
     res.status(500).json({ error: `Failed to simulate payment: ${error.message}` });
   }
 });
+// app.use('/api/iot', iotRoutes);
+app.get('/meter/:meterNo/balance', async (req, res) => {
+  try {
+    const meterNo = req.params.meterNo;
+    const snap = await db.ref(`meters/${meterNo}/balance`).once('value');
+    res.json({ meterNo, balance: snap.val() || 0 });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
+// ESP32 sends consumption updates
+app.post('/consume', async (req, res) => {
+  try {
+    const key = req.header('x-api-key');
+    if (key !== API_KEY) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { meterNo, units } = req.body;
+    if (!meterNo || typeof units !== 'number') {
+      return res.status(400).json({ error: 'meterNo and units are required' });
+    }
+
+    const result = await consumeUnits(meterNo, units);
+    res.json({ ok: true, ...result });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 app.listen(PORT, () => {
   console.log(`M-Pesa middleware server listening on port ${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/health`);

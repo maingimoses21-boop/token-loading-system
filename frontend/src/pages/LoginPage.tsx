@@ -21,7 +21,8 @@ const LoginPage = () => {
   const [registerData, setRegisterData] = useState({
     name: '',
     email: '',
-    meter_no: ''
+    meter_no: '',
+    phone_number: ''
   });
   const [isRegistering, setIsRegistering] = useState(false);
   
@@ -72,7 +73,7 @@ const LoginPage = () => {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!registerData.name.trim() || !registerData.email.trim() || !registerData.meter_no.trim()) {
+    if (!registerData.name.trim() || !registerData.email.trim() || !registerData.meter_no.trim() || !registerData.phone_number.trim() ) {
       toast({
         title: "Validation Error",
         description: "Please fill in all fields",
@@ -105,7 +106,7 @@ const LoginPage = () => {
       });
 
       // Reset form and close modal
-      setRegisterData({ name: '', email: '', meter_no: '' });
+      setRegisterData({ name: '', email: '', meter_no: '', phone_number: '' });
       setIsRegisterModalOpen(false);
 
     } catch (error) {
@@ -235,6 +236,20 @@ const LoginPage = () => {
                         placeholder="Enter meter number"
                         value={registerData.meter_no}
                         onChange={(e) => setRegisterData(prev => ({ ...prev, meter_no: e.target.value }))}
+                        disabled={isRegistering}
+                        required
+                        className="bg-white border-gray-300 text-black"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="registerPhonenumber">Phone number</Label>
+                      <Input
+                        id="registerPhonenumber"
+                        type="text"
+                        placeholder="Enter phone number"
+                        value={registerData.phone_number}
+                        onChange={(e) => setRegisterData(prev => ({ ...prev, phone_number: e.target.value }))}
                         disabled={isRegistering}
                         required
                         className="bg-white border-gray-300 text-black"

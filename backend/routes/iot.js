@@ -7,7 +7,7 @@ const { db } = require('../firebase');
 // Secure your ESP32 calls with an API key
 const API_KEY = process.env.API_KEY || 'default-key';
 // Get meter balance (for ESP32 or frontend)
-router.get('/meter/:12345678/balance', async (req, res) => {
+router.get('/meter/:meterNo/balance', async (req, res) => {
   try {
     const meterNo = req.params.meterNo;
     const snap = await db.ref(`meters/${meterNo}/balance`).once('value');
