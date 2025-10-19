@@ -88,6 +88,14 @@ async function createTransactionForMeter(meterNo, amount, status = 'SUCCESS', re
         last_units_purchased: units
       });
       console.log(`Updated user ${userId} with latest_transaction_id: ${transactionId}`);
+      try {
+        // Recalculate user's available units (sum of successful transactions) and persist to users/<userId>/balance
+        const availableUnits = await calculateAvailableUnits(userId);
+        await userRef.update({ balance: availableUnits });
+        console.log(`Updated user ${userId} balance: ${availableUnits}`);
+      } catch (err) {
+        console.warn(`Failed to update user ${userId} balance after creating transaction:`, err.message);
+      }
     }
     
     return transaction;
@@ -375,6 +383,15 @@ async function saveCallbackTransaction(callbackData) {
         last_payment_amount: amount
       });
       console.log(`Updated user ${userId} with latest_transaction_id: ${transactionId}`);
+      try {
+        // Recalculate user's balance (sum of successful transactions) and persist
+        // Prefer using stored units if present, otherwise derive from amount
+        const availableUnits = await calculateAvailableUnits(userId);
+        await userRef.update({ balance: availableUnits });
+        console.log(`Updated user ${userId} balance: ${availableUnits}`);
+      } catch (err) {
+        console.warn(`Failed to update user ${userId} balance after callback processing:`, err.message);
+      }
     }
     
     return {

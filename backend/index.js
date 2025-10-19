@@ -166,24 +166,41 @@ app.get('/transactions/:userId', async (req, res) => {
   }
 });
 
-// Get user balance (sum of all successful transactions)
-app.get('/users/:userId/balance', async (req, res) => {
+// Get user balance by meter number (returns persisted balance in units)
+app.get('/users/:meterNo/balance', async (req, res) => {
   try {
-    const { userId } = req.params;
-    console.log(`Fetching balance for user: ${userId}`);
-    
+    const { meterNo } = req.params;
+    console.log(`Fetching balance for meter: ${meterNo}`);
+
+    // Find the userId by meter number
+    const userId = await findUserIdByMeter(meterNo);
+    if (!userId) {
+      return res.status(404).json({ error: `No user found with meter_no: ${meterNo}` });
+    }
+
+    // Prefer persisted balance on the user record (units). If missing, fall back to recomputing.
+    const userSnap = await db.ref(`users/${userId}`).once('value');
+    if (userSnap.exists()) {
+      const user = userSnap.val();
+      const persistedBalance = typeof user.balance === 'number' ? user.balance : (user.balance ? parseFloat(user.balance) : null);
+      if (persistedBalance !== null && persistedBalance !== undefined && !Number.isNaN(persistedBalance)) {
+        return res.status(200).json({
+          meter_no: meterNo,
+          availableUnits: Number(parseFloat(persistedBalance).toFixed(2)),
+          timestamp: new Date().toISOString()
+        });
+      }
+    }
+
+    // Fallback to recomputing if persisted balance isn't present or isn't numeric
     const balanceData = await calculateUserBalance(userId);
-    
-    res.status(200).json({
-      user_id: userId,
-      totalAmountPaid: balanceData.totalAmountPaid,
-      totalUnitsPurchased: balanceData.totalUnitsPurchased,
+    return res.status(200).json({
+      meter_no: meterNo,
       availableUnits: balanceData.availableUnits,
-      transactionCount: balanceData.transactionCount,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('Error fetching user balance:', error.message);
+    console.error('Error fetching user balance by meter:', error.message);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

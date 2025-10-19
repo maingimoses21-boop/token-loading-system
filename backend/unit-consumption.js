@@ -20,70 +20,25 @@ class UnitConsumptionService {
    * Start the consumption service
    */
   start() {
-    if (this.isRunning) {
-      console.log('⚡ Unit consumption service is already running');
-      return;
-    }
-
-    console.log(`⚡ Starting unit consumption service...`);
-    console.log(`📊 Rate: ${this.consumptionRate} units every ${this.consumptionInterval / 1000} seconds`);
-    
-    this.isRunning = true;
-    this.intervalId = setInterval(() => {
-      this.consumeUnitsForAllUsers();
-    }, this.consumptionInterval);
-
-    console.log('✅ Unit consumption service started successfully');
+    // Automatic consumption simulation disabled.
+    // If you need to re-enable, restore the interval logic here.
+    console.log('⚡ Unit consumption service start called, but automatic consumption is disabled.');
+    this.isRunning = false;
   }
 
   /**
    * Stop the consumption service
    */
   stop() {
-    if (!this.isRunning) {
-      console.log('⚡ Unit consumption service is not running');
-      return;
-    }
-
-    console.log('🛑 Stopping unit consumption service...');
-    clearInterval(this.intervalId);
-    this.isRunning = false;
-    console.log('✅ Unit consumption service stopped');
+    console.log('🛑 Unit consumption service stop called (service is disabled)');
   }
 
   /**
    * Consume units for all users who have available units
    */
   async consumeUnitsForAllUsers() {
-    try {
-      const timestamp = new Date().toISOString();
-      console.log(`[${timestamp}] 🔄 Processing unit consumption cycle...`);
-
-      // Get all users
-      const usersRef = db.ref('users');
-      const usersSnapshot = await usersRef.once('value');
-
-      if (!usersSnapshot.exists()) {
-        console.log('No users found');
-        return;
-      }
-
-      const users = usersSnapshot.val();
-      let processedUsers = 0;
-
-      for (const [userId, userData] of Object.entries(users)) {
-        try {
-          await this.consumeUnitsForUser(userId, userData);
-          processedUsers++;
-        } catch (error) {
-          console.error(`Error processing user ${userId}:`, error.message);
-        }
-      }
-
-      console.log(`[${timestamp}] ✅ Processed ${processedUsers} users`);
-    } catch (error) {
-      console.error('Error in consumption cycle:', error.message);
-    }
+    // Automatic consumption disabled. No-op.
+    console.log('Unit consumption cycle invoked but disabled.');
   }
 
   /**
